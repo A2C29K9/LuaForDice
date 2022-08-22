@@ -297,3 +297,7 @@ function GItts(msg)
 			【.GItts npcList】查看可以使用的人物]]
     end
 end
+
+-- Plan:
+--  > 情感要素
+--  > 转义要素
