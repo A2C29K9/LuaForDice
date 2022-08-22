@@ -196,6 +196,10 @@ table.list = function(t)
      return retstr
 end
 
+spaceKiller = function(str)
+    return string.gsub(str, "[%s]+", "")
+  end
+  
 -------------------------------------------------------------------------
 -- 接下来的才是脚本主体
 -- No unauthorized use without permission.
