@@ -88,6 +88,7 @@ local MasterQQ = tonumber(string.match(read_file("conf//Console.xml"), "<master>
 -- BY 简律纯.
 -- 2022/6/10
 -------------------------------------------------------------------------
+
 -- 读全部
 load_all = function(fileName)
     assert(type(fileName) == "string", "参数“fileName”必须是字符串哦")
@@ -196,16 +197,18 @@ table.list = function(t)
      return retstr
 end
 
+-- 去除空格占位符
 spaceKiller = function(str)
     return string.gsub(str, "[%s]+", "")
   end
-  
+
 -------------------------------------------------------------------------
 -- 接下来的才是脚本主体
 -- No unauthorized use without permission.
 -- BY 简律纯.
 -- 2022/08/22
 -------------------------------------------------------------------------
+
 local settings_text =
     [[
 [Master]
@@ -233,18 +236,6 @@ if not getUserConf(getDiceQQ(), "GI_tts") then
     log(os.date("%X") .. "\n> 原神tts:初始化完成~", 1)
 end
 
---[[
-	settings["noise"] = ReadIni(confPath,"default settings","noise")
-	settings["noisew"] = ReadIni(confPath,"default settings","noisew")
-	settings["length"] = ReadIni(confPath,"default settings","length")
-
-	WriteIni(confPath,"Master","QQ",MasterQQ)
-    WriteIni(confPath,"Master","nick",getUserConf(MasterQQ,"name"))
-    WriteIni(confPath,"UserConfig","noisew","0.8")
-    WriteIni(confPath,"UserConfig","length","1.2")
-    WriteIni(confPath,"AutoUpdate","Version","v1.0.2 ;laset version")
-
-]]
 function letSpeaker(msg)
     local npc = string.match(msg.fromMsg, "让(.-)说")
     if npc then
