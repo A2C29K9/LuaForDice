@@ -1,14 +1,14 @@
 -- by 简律纯. For 阿尘 22/8/20
 
 write_file = function(path, text, mode)
-    file = io.open(getDiceDir() .. "\\" .. path, mode)
+    file = io.open(path, mode)
     file.write(file, text)
     io.close(file)
 end
 
 read_file = function(path, mode)
     local text = ""
-    local file = io.open(getDiceDir() .. "\\" .. path, mode)
+    local file = io.open(path, mode)
     if (file ~= nil) then
         text = file.read(file, "*a")
         io.close(file)
@@ -78,9 +78,10 @@ msg_order = {["让"] = "letSpeaker", ["说"] = "doSpeaker", [".GItts"] = "GItts"
 
 settings = {["noise"] = 0, ["noisew"] = 0, ["length"] = 0}
 
-local dataPath = getDiceDir() .. "//GI_tts.default.data"
-local confPath = getDiceDir() .. "//GI_tts.settings.ini"
-local MasterQQ = tonumber(string.match(read_file("conf//Console.xml"), "<master>(%d+)</master>", 0))
+local dataFolder = getDiceDir() .. "\\plugin\\Genshin_Impact_tts\\data"
+local dataPath = dataFolder.."\\default.json"
+local confPath = getDiceDir() .. "\\plugin\\Genshin_Impact_tts\\settings.ini"
+local MasterQQ = tonumber(string.match(read_file("conf\\Console.xml"), "<master>(%d+)</master>", 0))
 
 -------------------------------------------------------------------------
 -- EDIT INI FILE
@@ -197,10 +198,59 @@ table.list = function(t)
      return retstr
 end
 
--- 去除空格占位符
+-- 空格占位符处理
 spaceKiller = function(str)
-    return string.gsub(str, "[%s]+", "")
+    return string.gsub(str, "[%s]+", "+")
   end
+
+--作用：获取文件夹下的一级文件及文件夹table
+--参数: path——>遍历文件的路径
+getFileList=function(path)
+	
+	local a = io.popen("dir "..path.."/");
+	local fileTable = {};
+	
+	if a==nil then
+		
+	else
+		for l in a:lines() do
+			table.insert(fileTable,l)
+		end
+	end
+	return fileTable;
+end;
+ 
+--作用：判断文件是否存在
+--参数: path——>文件夹路径
+--返回值：true/false ——>是否存在
+isFileExist=function(path)
+	
+	f=io.open(path,"w")
+	
+	return f~=nil and f:close();
+end;
+ 
+--作用：判断文件夹是否存在
+--参数: folderPath——>文件夹路径
+--返回值：true/false ——>是否存在
+isFolderExist=function (folderPath)
+	
+	return os.execute("dir "..folderPath)
+end
+
+CER = function(fun,arg1,arg2,arg3,arg4,arg5)
+    local i
+  local ret,errMessage=pcall(fun,arg1,arg2,arg3,arg4,arg5);
+  wrong=ret and "false" or "true"
+  --return "是否错误:\n"..错误.." \n\n出错信息:\n" .. (errMessage or "无")
+  if wrong=="true" then--错误提示
+    local ret,errMessage=pcall(fun,arg1,arg2,arg3,arg4,arg5)
+    return "\n错误详情：\n"..errMessage--output[i]
+  else--无错误正常执行
+    ret,back=pcall(fun,arg1,arg2,arg3,arg4,arg5)
+    return back
+  end
+end
 
 -------------------------------------------------------------------------
 -- 接下来的才是脚本主体
@@ -211,7 +261,7 @@ spaceKiller = function(str)
 
 local settings_text =
     [[
-[Master]
+[MasterConfig]
 nick=nil
 QQ=nil
 
@@ -226,9 +276,9 @@ Version=v1.2.2
 ]]
 
 if not getUserConf(getDiceQQ(), "GI_tts") then
-    write_file("GI_tts.settings.ini", settings_text, "w+")
-	WriteIni(confPath,"Master","QQ",MasterQQ)
-    WriteIni(confPath,"Master","nick",getUserConf(MasterQQ,"name"))
+    write_file(confPath, settings_text, "w+")
+	WriteIni(confPath,"MasterConfig","QQ",MasterQQ)
+    WriteIni(confPath,"MasterConfig","nick",getUserConf(MasterQQ,"name"))
     WriteIni(confPath,"UserConfig","noisew","0.8")
     WriteIni(confPath,"UserConfig","length","1.2")
     WriteIni(confPath,"AutoUpdate","Version","v1.2.2 ;laset version")
@@ -244,7 +294,7 @@ function letSpeaker(msg)
         for i = 1, #npcList do
             if npcList[i] == npc then
                 return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..
-                    npcList[i] .. "&text=" .. text .. "]"
+                    npcList[i] .. "&text=" .. spaceKiller(text) .. "]"
             end
         end
         --return #npcList
@@ -264,7 +314,7 @@ function doSpeaker(msg)
     if p or b then
         return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..string.sub(msg.fromMsg, p, b) .. "&text=" .. string.sub(msg.fromMsg, #"说" + 1) .. "]"
     else
-        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=神里绫华&text=" ..string.sub(msg.fromMsg, #"说" + 1) .. "]"
+        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=神里绫华&text=" ..spaceKiller(string.sub(msg.fromMsg, #"说" + 1)) .. "]"
     end
 end
 
@@ -273,13 +323,13 @@ function GItts(msg)
 
     if command == "reload" then
         setUserConf(getDiceQQ(), "GI_tts", false)
-        eventMsg(".system load", msg.fromGroup, msg.fromQQ)
+        eventMsg(".system load", 0, msg.fromQQ)
     elseif command == "ini" then
         return read_file("GI_tts.settings.ini")
 	elseif checkChinese(command) then
 		local npc = ReadIni(confPath,"UserConfig","DefaultNpc")
 		if npc == "*" then npc = npcList[ranint(1,#npcList)] end
-		return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker="..npc.."&text=" ..string.sub(msg.fromMsg, #".GItts " + 1) .. "]"
+		return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker="..npc.."&text=" ..spaceKiller(string.sub(msg.fromMsg, #".GItts " + 1)) .. "]"
 	elseif command == "npcList" then
 		return table.list(npcList)
 	else
