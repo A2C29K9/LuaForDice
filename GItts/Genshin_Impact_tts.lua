@@ -1,4 +1,5 @@
 -- by 简律纯. For 阿尘 22/8/20
+-- About API? View more at https://github.com/w4123/vits
 
 write_file = function(path, text, mode)
     file = io.open(path, mode)
@@ -76,12 +77,12 @@ npcList = {
 
 msg_order = {["让"] = "letSpeaker", ["说"] = "doSpeaker", [".GItts"] = "GItts"}
 
-settings = {["noise"] = 0, ["noisew"] = 0, ["length"] = 0}
+settings = {["noise"] = 0, ["noisew"] = 0, ["length"] = 0, ["format"] = "mp3"}
 
 local dataFolder = getDiceDir() .. "\\plugin\\Genshin_Impact_tts\\data"
-local dataPath = dataFolder.."\\default.json"
+local dataPath = dataFolder .. "\\default.json"
 local confPath = getDiceDir() .. "\\plugin\\Genshin_Impact_tts\\settings.ini"
-local MasterQQ = tonumber(string.match(read_file("conf\\Console.xml"), "<master>(%d+)</master>", 0))
+local MasterQQ = tonumber(string.match(read_file(getDiceDir() .. "\\conf\\Console.xml"), "<master>(%d+)</master>", 0))
 
 -------------------------------------------------------------------------
 -- EDIT INI FILE
@@ -150,106 +151,150 @@ end
 
 --检测中文，如有则返回true
 checkChinese = function(str)
-  local tmpStr=str
-  local _,sum=string.gsub(str,"[^\128-\193]","")
-  local _,countEn=string.gsub(tmpStr,"[%z\1-\127]","")
-  if sum-countEn ~= 0 then return true else return false end
+    local tmpStr = str
+    local _, sum = string.gsub(str, "[^\128-\193]", "")
+    local _, countEn = string.gsub(tmpStr, "[%z\1-\127]", "")
+    if sum - countEn ~= 0 then
+        return true
+    else
+        return false
+    end
 end
 
 ToStringEx = function(value)
-    if type(value)=='table' then
-       return table.list(value)
-    elseif type(value)=='string' then
-        return "\'"..value.."\'"
+    if type(value) == "table" then
+        return table.list(value)
+    elseif type(value) == "string" then
+        return "'" .. value .. "'"
     else
-       return tostring(value)
+        return tostring(value)
     end
 end
 
 table.list = function(t)
-    if t == nil then return "" end
-    local retstr= "{"
+    if t == nil then
+        return ""
+    end
+    local retstr = "{"
 
     local i = 1
-    for key,value in pairs(t) do
+    for key, value in pairs(t) do
         local signal = ","
-        if i==1 then
-          signal = ""
+        if i == 1 then
+            signal = ""
         end
 
         if key == i then
-            retstr = retstr..signal..ToStringEx(value)
+            retstr = retstr .. signal .. ToStringEx(value)
         else
-            if type(key)=='number' or type(key) == 'string' then
-                retstr = retstr..signal..'['..ToStringEx(key).."]="..ToStringEx(value)
+            if type(key) == "number" or type(key) == "string" then
+                retstr = retstr .. signal .. "[" .. ToStringEx(key) .. "]=" .. ToStringEx(value)
             else
-                if type(key)=='userdata' then
-                    retstr = retstr..signal.."*s"..TableToStr(getmetatable(key)).."*e".."="..ToStringEx(value)
+                if type(key) == "userdata" then
+                    retstr =
+                        retstr .. signal .. "*s" .. TableToStr(getmetatable(key)) .. "*e" .. "=" .. ToStringEx(value)
                 else
-                    retstr = retstr..signal..key.."="..ToStringEx(value)
+                    retstr = retstr .. signal .. key .. "=" .. ToStringEx(value)
                 end
             end
         end
 
-        i = i+1
+        i = i + 1
     end
 
-     retstr = retstr.."}"
-     return retstr
+    retstr = retstr .. "}"
+    return retstr
 end
 
 -- 空格占位符处理
 spaceKiller = function(str)
     return string.gsub(str, "[%s]+", "+")
-  end
+end
 
 --作用：获取文件夹下的一级文件及文件夹table
 --参数: path——>遍历文件的路径
-getFileList=function(path)
-	
-	local a = io.popen("dir "..path.."/");
-	local fileTable = {};
-	
-	if a==nil then
-		
-	else
-		for l in a:lines() do
-			table.insert(fileTable,l)
-		end
-	end
-	return fileTable;
-end;
- 
---作用：判断文件是否存在
---参数: path——>文件夹路径
---返回值：true/false ——>是否存在
-isFileExist=function(path)
-	
-	f=io.open(path,"w")
-	
-	return f~=nil and f:close();
-end;
- 
+getFileList = function(path)
+    local a = io.popen("dir " .. path .. "/")
+    local fileTable = {}
+
+    if a == nil then
+    else
+        for l in a:lines() do
+            table.insert(fileTable, l)
+        end
+    end
+    return fileTable
+end
+
 --作用：判断文件夹是否存在
 --参数: folderPath——>文件夹路径
 --返回值：true/false ——>是否存在
-isFolderExist=function (folderPath)
-	
-	return os.execute("dir "..folderPath)
+isFolderExist = function(folderPath)
+    return os.execute("cd " .. folderPath)
 end
 
-CER = function(fun,arg1,arg2,arg3,arg4,arg5)
+CER = function(fun, arg1, arg2, arg3, arg4, arg5)
     local i
-  local ret,errMessage=pcall(fun,arg1,arg2,arg3,arg4,arg5);
-  wrong=ret and "false" or "true"
-  --return "是否错误:\n"..错误.." \n\n出错信息:\n" .. (errMessage or "无")
-  if wrong=="true" then--错误提示
-    local ret,errMessage=pcall(fun,arg1,arg2,arg3,arg4,arg5)
-    return "\n错误详情：\n"..errMessage--output[i]
-  else--无错误正常执行
-    ret,back=pcall(fun,arg1,arg2,arg3,arg4,arg5)
-    return back
-  end
+    local ret, errMessage = pcall(fun, arg1, arg2, arg3, arg4, arg5)
+    wrong = ret and "false" or "true"
+    --return "是否错误:\n"..错误.." \n\n出错信息:\n" .. (errMessage or "无")
+    if wrong == "true" then --错误提示
+        --output[i]
+        local ret, errMessage = pcall(fun, arg1, arg2, arg3, arg4, arg5)
+        return "\n错误详情：\n" .. errMessage
+    else --无错误正常执行
+        ret, back = pcall(fun, arg1, arg2, arg3, arg4, arg5)
+        return back
+    end
+end
+
+--调用方法：
+--local  str= "-6ciNeXFTlqy5Dcld8UPmsrcieJkmFJO4zDcaOP56YY$-$OPENTM207374570"
+--local tab = str_split(str, "$-$")
+--打印：["-6ciNeXFTlqy5Dcld8UPmsrcieJkmFJO4zDcaOP56YY","OPENTM207374570"]
+
+----------------------------------------
+-- @description 拆分字符串的方法
+-- @param str   传入的元字符串
+-- @param split_char  以什么符号拆分
+-- @return str_tab 返回拆分之后的字符串table
+-----------------------------------------
+function str_split(str, split_char)
+    local str_tab = {}
+    while (true) do
+        --问题在这里  local findstart,findend = string.find(str, split_char)
+        --这里第4个参数一定要给，第4个参数表示把要find的字符串，split_char当成一个整体字符串看。
+        --string.find返回找到匹配字符串的起始位置和结束位置
+        local findstart, findend = string.find(str, split_char, 1, true)
+        if not (findstart and findend) then
+            str_tab[#str_tab + 1] = str
+            break
+        end
+        local sub_str = string.sub(str, 1, findstart - 1)
+        str_tab[#str_tab + 1] = sub_str
+        str = string.sub(str, findend + 1, #str)
+    end
+
+    return str_tab
+end
+
+getFileList = function(path, exp)
+    local a = io.popen("dir " .. path .. exp .. " /b")
+    local fileTable = {}
+    local str = ""
+
+    if a == nil then
+    else
+        for l in a:lines() do
+            table.insert(fileTable, l)
+        end
+
+        for i = 1, #fileTable do
+            str = fileTable[i] .. "\n" .. str
+        end
+
+        return fileTable
+    end
 end
 
 -------------------------------------------------------------------------
@@ -270,34 +315,56 @@ noise=0.667
 noisew=0.8
 length=1.2 
 DefaultNpc=*
+format=mp3
 
 [AutoUpdate]
-Version=v1.2.2
-]]
+Version=v1.2.2]]
 
 if not getUserConf(getDiceQQ(), "GI_tts") then
+    mkDirs(getDiceDir() .. "\\plugin\\Genshin_Impact_tts")
     write_file(confPath, settings_text, "w+")
-	WriteIni(confPath,"MasterConfig","QQ",MasterQQ)
-    WriteIni(confPath,"MasterConfig","nick",getUserConf(MasterQQ,"name"))
-    WriteIni(confPath,"UserConfig","noisew","0.8")
-    WriteIni(confPath,"UserConfig","length","1.2")
-    WriteIni(confPath,"AutoUpdate","Version","v1.2.2 ;laset version")
+    WriteIni(confPath, "MasterConfig", "QQ", MasterQQ)
+    WriteIni(confPath, "MasterConfig", "nick", getUserConf(MasterQQ, "name"))
+    WriteIni(confPath, "UserConfig", "noisew", "0.8")
+    WriteIni(confPath, "UserConfig", "length", "1.2")
+    WriteIni(confPath, "UserConfig", "format", "mp3")
+    WriteIni(confPath, "AutoUpdate", "Version", "v1.2.2 ;laset version")
+    if not isFolderExist(getDiceDir() .. "\\SelfData\\GItts") then
+        expansion, state = 0, "失败，疑似没有SelfData/GItts文件夹 "
+    else
+        enable = 0
+        files = getFileList(getDiceDir() .. "\\SelfData\\GItts", "\\*.json")
+        state = "成功 共" .. #files .. "个拓展可用，已启用" .. enable .. "个"
+    end
     setUserConf(getDiceQQ(), "GI_tts", true)
-    log(os.date("%X") .. "\n> 原神tts:初始化完成~", 1)
+    log(os.date("%X") .. "\n> 原神tts:初始化完成~\n> 读取情绪拓展" .. state, 1)
 end
 
 function letSpeaker(msg)
     local npc = string.match(msg.fromMsg, "让(.-)说")
+
+    settings.noise = ReadIni(confPath, "UserConfig", "noise")
+    settings.noisew = ReadIni(confPath, "UserConfig", "noisew")
+    settings.length = ReadIni(confPath, "UserConfig", "length")
+    settings.format = ReadIni(confPath, "UserConfig", "format")
+
     if npc then
+        --return #npcList
         local prefix = "让" .. npc .. "说"
         local text = string.sub(msg.fromMsg, #prefix + 1)
         for i = 1, #npcList do
             if npcList[i] == npc then
                 return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..
-                    npcList[i] .. "&text=" .. spaceKiller(text) .. "]"
+                    npcList[i] ..
+                        "&text=" ..
+                            spaceKiller(text) ..
+                                "&noise=" ..
+                                    settings.noise ..
+                                        "&noisew=" ..
+                                            settings.noisew ..
+                                                "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
             end
         end
-        --return #npcList
     else
         return
     end
@@ -305,6 +372,12 @@ end
 
 function doSpeaker(msg)
     local p, b
+
+    settings.noise = ReadIni(confPath, "UserConfig", "noise")
+    settings.noisew = ReadIni(confPath, "UserConfig", "noisew")
+    settings.length = ReadIni(confPath, "UserConfig", "length")
+    settings.format = ReadIni(confPath, "UserConfig", "format")
+
     for i = 1, #npcList do
         p, b = string.find(msg.fromMsg, npcList[i])
         if p or b then
@@ -312,28 +385,62 @@ function doSpeaker(msg)
         end
     end
     if p or b then
-        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..string.sub(msg.fromMsg, p, b) .. "&text=" .. string.sub(msg.fromMsg, #"说" + 1) .. "]"
+        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..
+            string.sub(msg.fromMsg, p, b) ..
+                "&text=" ..
+                    string.sub(msg.fromMsg, #"说" + 1) ..
+                        "&noise=" ..
+                            settings.noise ..
+                                "&noisew=" ..
+                                    settings.noisew ..
+                                        "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
     else
-        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=神里绫华&text=" ..spaceKiller(string.sub(msg.fromMsg, #"说" + 1)) .. "]"
+        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=神里绫华&text=" ..
+            spaceKiller(string.sub(msg.fromMsg, #"说" + 1)) ..
+                "&noise=" ..
+                    settings.noise ..
+                        "&noisew=" ..
+                            settings.noisew .. "&length=" .. settings.length .. "&format=" .. settings.format .. "]"
     end
 end
 
 function GItts(msg)
-    command = string.sub(msg.fromMsg, #".GItts" + 2)
+    command = str_split(msg.fromMsg, " ")
 
-    if command == "reload" then
+    settings.noise = ReadIni(confPath, "UserConfig", "noise")
+    settings.noisew = ReadIni(confPath, "UserConfig", "noisew")
+    settings.length = ReadIni(confPath, "UserConfig", "length")
+    settings.format = ReadIni(confPath, "UserConfig", "format")
+
+    if command[2] == "reload" then
         setUserConf(getDiceQQ(), "GI_tts", false)
         eventMsg(".system load", 0, msg.fromQQ)
-    elseif command == "ini" then
-        return read_file("GI_tts.settings.ini")
-	elseif checkChinese(command) then
-		local npc = ReadIni(confPath,"UserConfig","DefaultNpc")
-		if npc == "*" then npc = npcList[ranint(1,#npcList)] end
-		return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker="..npc.."&text=" ..spaceKiller(string.sub(msg.fromMsg, #".GItts " + 1)) .. "]"
-	elseif command == "npcList" then
-		return table.list(npcList)
-	else
-		return [[
+    elseif command[2] == "ini" then
+        items = str_split(msg.fromMsg, " ")
+        if #items == 2 then
+            return read_file(confPath)
+        elseif items[3] == "set" then
+            WriteIni(confPath, items[4], items[5], items[6])
+            return "节点" .. items[4] .. "的key" .. items[5] .. "值已修改为" .. items[6]
+        end
+    elseif checkChinese(command[2]) then
+        local npc = ReadIni(confPath, "UserConfig", "DefaultNpc")
+        if npc == "*" then
+            npc = npcList[ranint(1, #npcList)]
+        end
+        return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=" ..
+            npc ..
+                "&text=" ..
+                    spaceKiller(string.sub(msg.fromMsg, #".GItts " + 1)) ..
+                        "_&noise=" ..
+                            settings.noise ..
+                                "&noisew=" ..
+                                    settings.noisew ..
+                                        "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
+    elseif command[2] == "npcList" then
+        return table.list(npcList)
+    else
+        return [[
 		原神tts·GItts
 			【.GItts reload】重新配置ini文件并重载
 			【.GItts ini (set) (section) (key) (value)】ini配置文件操作
