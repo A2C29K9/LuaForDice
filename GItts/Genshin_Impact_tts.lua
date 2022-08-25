@@ -1,6 +1,7 @@
+--------------------------------------------------------
 -- by 简律纯. For 阿尘 22/8/20
 -- About API? View more: https://github.com/w4123/vits
-
+--------------------------------------------------------
 write_file = function(path, text, mode)
     file = io.open(path, mode)
     file.write(file, text)
@@ -279,7 +280,6 @@ end
 -- BY 简律纯.
 -- 2022/08/22
 -------------------------------------------------------------------------
-
 local settings_text =
     [[
 [MasterConfig]
@@ -316,6 +316,10 @@ if not getUserConf(getDiceQQ(), "GI_tts") then
     log(os.date("%X") .. "\n> 原神tts:初始化完成~\n> 读取情绪拓展" .. state, 1)
 end
 
+-------------------------------------------------
+-- 让<speaker>说<text>
+-- speaker必须为npcList内容,text支持空格.
+-------------------------------------------------
 function letSpeaker(msg)
     local npc = string.match(msg.fromMsg, "让(.-)说")
 
@@ -349,6 +353,10 @@ function letSpeaker(msg)
     end
 end
 
+-------------------------------------------------
+-- 说(.*)
+-- 支持加空格.
+-------------------------------------------------
 function doSpeaker(msg)
     local p, b
 
@@ -390,6 +398,11 @@ function doSpeaker(msg)
     end
 end
 
+-------------------------------------------------
+-- 配置指令
+-- @.GItts <arg>
+-- 指令头不分大小写,后面的参数严格区分大小写.
+-------------------------------------------------
 function GItts(msg)
     command = string.split(msg.fromMsg, " ")
 
