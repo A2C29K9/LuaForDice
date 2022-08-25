@@ -1,5 +1,5 @@
 -- by 简律纯. For 阿尘 22/8/20
--- About API? View more at https://github.com/w4123/vits
+-- About API? View more: https://github.com/w4123/vits
 
 write_file = function(path, text, mode)
     file = io.open(path, mode)
@@ -17,7 +17,7 @@ read_file = function(path, mode)
         return "没有该文件或文件内容为空哦"
     end
     return text
-end
+end  
 
 npcList = {
     "派蒙",
@@ -90,8 +90,6 @@ local MasterQQ = tonumber(string.match(read_file(getDiceDir() .. "\\conf\\Consol
 -- BY 简律纯.
 -- 2022/6/10
 -------------------------------------------------------------------------
-
--- 读全部
 load_all = function(fileName)
     assert(type(fileName) == "string", "参数“fileName”必须是字符串哦")
     local file = assert(io.open(fileName, "r"), "加载文件时出错：" .. fileName)
@@ -121,7 +119,7 @@ load_all = function(fileName)
     file:close()
     return data
 end
--- 写全部
+
 save_all = function(fileName, data)
     assert(type(fileName) == "string", "参数“fileName”必须是字符串哦")
     assert(type(data) == "table", "参数“data”必须是一个表！")
@@ -137,19 +135,18 @@ save_all = function(fileName, data)
     file:write(contents)
     file:close()
 end
--- 读单条
+
 ReadIni = function(IniPath, Section, Key)
     local data = load_all(IniPath)
     return data[Section][Key]
 end
--- 写单条
+
 WriteIni = function(IniPath, Section, Key, Value)
     local data = load_all(IniPath)
     data[Section][Key] = Value
     save_all(IniPath, data)
 end
 
---检测中文，如有则返回true
 checkChinese = function(str)
     local tmpStr = str
     local _, sum = string.gsub(str, "[^\128-\193]", "")
@@ -206,13 +203,10 @@ table.list = function(t)
     return retstr
 end
 
--- 空格占位符处理
 spaceKiller = function(str)
     return string.gsub(str, "[%s]+", "+")
 end
 
---作用：获取文件夹下的一级文件及文件夹table
---参数: path——>遍历文件的路径
 getFileList = function(path)
     local a = io.popen("dir " .. path .. "/")
     local fileTable = {}
@@ -226,9 +220,6 @@ getFileList = function(path)
     return fileTable
 end
 
---作用：判断文件夹是否存在
---参数: folderPath——>文件夹路径
---返回值：true/false ——>是否存在
 isFolderExist = function(folderPath)
     return os.execute("cd " .. folderPath)
 end
@@ -248,23 +239,9 @@ CER = function(fun, arg1, arg2, arg3, arg4, arg5)
     end
 end
 
---调用方法：
---local  str= "-6ciNeXFTlqy5Dcld8UPmsrcieJkmFJO4zDcaOP56YY$-$OPENTM207374570"
---local tab = str_split(str, "$-$")
---打印：["-6ciNeXFTlqy5Dcld8UPmsrcieJkmFJO4zDcaOP56YY","OPENTM207374570"]
-
-----------------------------------------
--- @description 拆分字符串的方法
--- @param str   传入的元字符串
--- @param split_char  以什么符号拆分
--- @return str_tab 返回拆分之后的字符串table
------------------------------------------
-function str_split(str, split_char)
+string.split = function(str, split_char)
     local str_tab = {}
     while (true) do
-        --问题在这里  local findstart,findend = string.find(str, split_char)
-        --这里第4个参数一定要给，第4个参数表示把要find的字符串，split_char当成一个整体字符串看。
-        --string.find返回找到匹配字符串的起始位置和结束位置
         local findstart, findend = string.find(str, split_char, 1, true)
         if not (findstart and findend) then
             str_tab[#str_tab + 1] = str
@@ -299,7 +276,6 @@ end
 
 -------------------------------------------------------------------------
 -- 接下来的才是脚本主体
--- No unauthorized use without permission.
 -- BY 简律纯.
 -- 2022/08/22
 -------------------------------------------------------------------------
@@ -362,7 +338,10 @@ function letSpeaker(msg)
                                     settings.noise ..
                                         "&noisew=" ..
                                             settings.noisew ..
-                                                "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
+                                                "&length=" ..
+                                                    settings.length ..
+                                                        "&format=" ..
+                                                            settings.format .. "]"
             end
         end
     else
@@ -393,19 +372,26 @@ function doSpeaker(msg)
                             settings.noise ..
                                 "&noisew=" ..
                                     settings.noisew ..
-                                        "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
+                                        "&length=" ..
+                                            settings.length ..
+                                                "&format=" ..
+                                                    settings.format .. "]"
     else
         return "[CQ:record,file=http://233366.proxy.nscc-gz.cn:8888?speaker=神里绫华&text=" ..
             spaceKiller(string.sub(msg.fromMsg, #"说" + 1)) ..
                 "&noise=" ..
                     settings.noise ..
                         "&noisew=" ..
-                            settings.noisew .. "&length=" .. settings.length .. "&format=" .. settings.format .. "]"
+                            settings.noisew ..
+                                "&length=" ..
+                                    settings.length ..
+                                        "&format=" ..
+                                            settings.format .. "]"
     end
 end
 
 function GItts(msg)
-    command = str_split(msg.fromMsg, " ")
+    command = string.split(msg.fromMsg, " ")
 
     settings.noise = ReadIni(confPath, "UserConfig", "noise")
     settings.noisew = ReadIni(confPath, "UserConfig", "noisew")
@@ -416,14 +402,14 @@ function GItts(msg)
         setUserConf(getDiceQQ(), "GI_tts", false)
         eventMsg(".system load", 0, msg.fromQQ)
     elseif command[2] == "ini" then
-        items = str_split(msg.fromMsg, " ")
+        items = string.split(msg.fromMsg, " ")
         if #items == 2 then
             return read_file(confPath)
         elseif items[3] == "set" then
             WriteIni(confPath, items[4], items[5], items[6])
-            return "节点" .. items[4] .. "的key" .. items[5] .. "值已修改为" .. items[6]
+            return "节点" .. items[4] .. "的key:" .. items[5] .. "值已修改为" .. items[6]
         end
-    elseif checkChinese(command[2]) then
+    elseif checkChinese(msg.fromMsg) then
         local npc = ReadIni(confPath, "UserConfig", "DefaultNpc")
         if npc == "*" then
             npc = npcList[ranint(1, #npcList)]
@@ -436,7 +422,10 @@ function GItts(msg)
                             settings.noise ..
                                 "&noisew=" ..
                                     settings.noisew ..
-                                        "&length=" .. settings.length .. "&format=" .. ettings.format .. "]"
+                                        "&length=" ..
+                                            settings.length ..
+                                                "&format=" ..
+                                                    settings.format .. "]"
     elseif command[2] == "npcList" then
         return table.list(npcList)
     else
