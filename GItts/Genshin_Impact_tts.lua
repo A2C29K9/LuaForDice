@@ -449,6 +449,7 @@ function GItts(msg)
 			【.GItts (文本)】调用key:DefaultNpc说一句话
 			【.GItts whiteList (add|remove|clr) (word1[,word2[,word3]...])】添加语句白名单
 			【.GItts npcList】查看可以使用的人物]]
+            
     end
 end
 
